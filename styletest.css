@@ -1,0 +1,87 @@
+* {
+    font-family: Hack, monospace;
+    color: #E5E9F0;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-y: auto;
+    overflow-x: auto;
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: row;
+    background-color: #2E3440;
+    margin: 0px;
+}
+
+#id_status_panel {
+    width: 300px;
+
+}
+
+/* #region Buttons */
+.padding_border {
+    height: 100%;
+    width: 100%;
+    display: block;
+    padding: 32px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: rgb(94, 129, 172);
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+/* #endregion */
+.text_interface_container {
+    overflow-y: auto;
+    height: 100%;
+
+
+}
+
+.text_row_container {
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+    margin-bottom: 5px;
+    width: 100%
+}
+
+.prompt_prefix_container {
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+}
+
+.prompt_prefix_player_location {
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+}
+
+.user_input_field {
+    margin-left: 8px;
+    width: 100%;
+}
+
+.command_input_box {
+    width: 100%;
+    border: none;
+    outline: none;
+    background-color: transparent;
+}
+
+/* #region deal with annoying behaviors */
+
+
+/* #endregion */
