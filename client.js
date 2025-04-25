@@ -1,7 +1,4 @@
-
-
 // #region focus to inputbox when clicking
-
 document.getElementById("id_prompt_panel").addEventListener("click", event => {
     document.getElementById("id_command_input_box").focus();
 });
