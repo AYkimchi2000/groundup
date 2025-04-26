@@ -1,5 +1,3 @@
-const { response } = require("express");
-
 // #region socket.io
 const socket = io();
 
@@ -69,8 +67,6 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             const clone_of_previous_textrow = document.getElementById('id_text_row_container').cloneNode(true);
             clone_of_previous_textrow.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
             clone_of_previous_textrow.removeAttribute('id');
-            const target_parent = document.getElementById("id_text_interface_container");
-            const old_element = document.getElementById("id_text_row_container")
 
             const response_row_container = document.createElement('div');
             const response_row_prefix = document.createElement('div');
@@ -82,9 +78,11 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             response_row_content.textContent = 'server response goes here';
             response_row_container.appendChild(response_row_prefix);
             response_row_container.appendChild(response_row_content);
-            
-            target_parent.insertBefore(clone_of_previous_textrow, old_element);
-            document.getElementById('id_command_input_box').value = "";
+
+            document.getElementById("id_text_interface_container").insertBefore(clone_of_previous_textrow, document.getElementById("id_text_row_container")); // insert previous text row element
+            document.getElementById("id_text_interface_container").insertBefore(response_row_container, document.getElementById("id_text_row_container")); // insert server response row element
+
+            document.getElementById('id_command_input_box').value = ""; // clear text input box
             // #endregion
         }
     }

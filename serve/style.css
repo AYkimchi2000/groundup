@@ -81,7 +81,7 @@ body {
     background-color: transparent;
 }
 
-.reponse_row_container {
+.response_row_container {
     width: 100%;
     display: flex;
     flex-flow: row;
@@ -89,13 +89,13 @@ body {
     margin-bottom: 5px;
 }
 
-.reponse_prefix_container {
+.response_prefix_container {
     display: flex;
     flex-flow: row;
     justify-content: flex-start;
 }
 
-.reponse_row_content {
+.response_row_content {
     margin-left: 8px;
     width: 100%;
 }
