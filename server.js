@@ -22,7 +22,7 @@ io.on('connection', (socket) => {
 io.on('connection', (socket) => {
     socket.on('client_command_input', (msg) => {
         console.log('nevermind');
-        io.emit('server_broadcast_all', '');
+        io.emit('server_broadcast_all', 'This is broadcast');
 
     });
 });
