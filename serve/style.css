@@ -103,6 +103,10 @@ body {
 
 
 /* #region deal with annoying behaviors */
-
-
+*:focus {
+    outline: none;
+}
+input:focus {
+    outline: none;
+}
 /* #endregion */
