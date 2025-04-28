@@ -1,0 +1,12 @@
+Definitely implement:
+
+1. 
+
+
+
+Maybe?
+
+1. Collapsable response and prompt row 
+    -like showing party member char profile can make console look messy.
+2. tabs to better show option data
+    -ref https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_tabs
