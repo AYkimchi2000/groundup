@@ -6,78 +6,53 @@ const { Server } = require('socket.io');
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
+const fs = require('fs');
 
+
+// send files within the serve folder to client
 app.use(express.static('serve'));
 
 
-
-//
+// user connect message
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  console.log(`user ${socket.id} connected`);
   socket.on('disconnect', () => {
     console.log('user disconnected');
   });
 });
 
-io.on('connection', (socket) => {
-    socket.on('client_command_input', (msg) => {
-        console.log('nevermind');
-        io.emit('server_broadcast_all', 'This is broadcaster');
-
-    });
-});
-
-server.listen(3000, () => {
-    console.log('server running at http://localhost:3000');
-});
-// #endregion
-
-
-
 // #region command parsing 
 io.on('connection', (socket) => {
   socket.on('client_command_input', (msg) => {
-    let msg_splitted = msg.split()
-      switch (msg_splitted[0]) {
-        case 'test':
-          switch (msg_splitted[1]){
-            case 'rename':
-              switch (msg_splitted[2]){
-                
-              }
-            case 'combat_init':
-              switch (msg_splitted[2]) {
-                
-              }
-            case 'char_select':
-              switch (msg_splitted[2]) {
-                case 'elliot':
-                case 'clarissa':
-                case 'mia':
-              }
-            case 'enemy_select':
-              switch (msg_splitted[2]) {
-                case 'goblin':
-                case 'skeleton':
-                case 'wolves':
-              }
-            case 'party':
-              switch (msg_splitted[2]) {
-                case '{playername}':
-                case 'view_member':
-                case 'invite':
-              }
-          }
+    const commandTree = JSON.parse(fs.readFileSync('./commandtree.json', 'utf8'));
+    const parts = msg.split(" ");
+    let current = commandTree;
+    for (const part of parts) {
+      if (!current[part]) {
+        io.emit('server_broadcast_all', `Command not found: ${part}`);
+        return;
       }
-    io.emit('server_broadcast_all', 'This is broadcaster');
+      current = current[part];
+    }
+
+    if (typeof current === "string") {
+      io.emit('server_broadcast_all', current);
+    } else {
+      io.emit('server_broadcast_all', "Incomplete command");
+    }
 
   });
 });
 
 
+server.listen(3000, () => {
+  console.log('server running at http://localhost:3000');
+});
+
+
 // test
 //   rename
-//     {whatevername}
+//     user_input_name
 //   combat_init
 //     y/n
 //   char_select
@@ -89,16 +64,10 @@ io.on('connection', (socket) => {
 //     skeleton
 //     wolves
 //   party
-//     {playername}
+//     playername
 //     view_member
 //     invite
 
 
 
-    //chat
-  
-
-choose char > choose/add party member > accept invite > choose monster > initiate combat > 
-
-// #endregion
 
