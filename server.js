@@ -8,25 +8,75 @@ const server = createServer(app);
 const io = new Server(server);
 const fs = require('fs');
 
-
 // send files within the serve folder to client
 app.use(express.static('serve'));
-
 
 // user connect message
 io.on('connection', (socket) => {
   console.log(`user ${socket.id} connected`);
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    console.log(`user ${socket.id} disconnected`);
   });
 });
 
-// #region command parsing 
+// #region command parsing & execution
 io.on('connection', (socket) => {
   socket.on('client_command_input', (msg) => {
-    const commandTree = JSON.parse(fs.readFileSync('./commandtree.json', 'utf8'));
+    console.log(`user ${socket.id} sent something`);
+
+    // #region command tree
+    const command_tree = {
+      test: {
+        rename: {
+          user_input_name: function () {
+            io.to(socket.id).emit('server_broadcast_all', `you are ${socket.id}!`);
+          }
+        },
+        combat_init: {
+          "y/n": function () {
+            console.log('this is again, working')
+          }
+        },
+        char_select: {
+          elliot: function () {
+            socket.emit("elliot", hi);
+          },
+          clarissa: function () {
+            socket.emit("clarissa", hi);
+          },
+          mia: function () {
+            socket.emit("mia", hi);
+          }
+        },
+        enemy_select: {
+          goblin: function () {
+            socket.emit("goblin", hi);
+          },
+          skeleton: function () {
+            socket.emit("skeleton", hi);
+          },
+          wolves: function () {
+            socket.emit("wolves", hi);
+          }
+        },
+        party: {
+          playername: function () {
+            socket.emit("playername", hi);
+          },
+          view_member: function () {
+            socket.emit("view_member", hi);
+          },
+          invite: function () {
+            socket.emit("invite", hi);
+          }
+        }
+      }
+    };
+    // #endregion 
+
+    // #region command tree walker
     const parts = msg.split(" ");
-    let current = commandTree;
+    let current = command_tree;
     for (const part of parts) {
       if (!current[part]) {
         io.emit('server_broadcast_all', `Command not found: ${part}`);
@@ -34,16 +84,12 @@ io.on('connection', (socket) => {
       }
       current = current[part];
     }
-
-    if (typeof current === "string") {
-      io.emit('server_broadcast_all', current);
-    } else {
-      io.emit('server_broadcast_all', "Incomplete command");
-    }
+    current();
+    // #endregion
 
   });
 });
-
+// #endregion
 
 server.listen(3000, () => {
   console.log('server running at http://localhost:3000');

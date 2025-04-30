@@ -1,0 +1,31 @@
+{
+    "command_tree": {
+        "test": {
+            "rename": {
+                "user_input_name": "Rename to user input name"
+            },
+            "combat_init": {
+                "y/n": "Combat init with yes/no"
+            },
+            "char_select": {
+                "elliot": "Selected Elliot",
+                "clarissa": "Selected Clarissa",
+                "mia": "Selected Mia"
+            },
+            "enemy_select": {
+                "goblin": "Selected Goblin",
+                "skeleton": "Selected Skeleton",
+                "wolves": "Selected Wolves"
+            },
+            "party": {
+                "playername": "Show player name",
+                "view_member": "View party member",
+                "invite": "Invite to party"
+            }
+        }
+    },
+
+    }
+    
+}
+

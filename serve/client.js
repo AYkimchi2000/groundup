@@ -1,14 +1,15 @@
 // #region socket.io
+
 const socket = io();
 
-
-// #region focus to inputbox when clicking
+// #region mouseclick listener focus to inputbox
 document.getElementById("id_prompt_panel").addEventListener("click", event => {
     document.getElementById("id_command_input_box").focus();
 });
 // #endregion
 
-// #region typing sound effect
+
+// #region keypress listener trigger sound effect
 const playSound = key => {
     const sound = (key === 'Enter' || key === ' ' || key === 'Backspace' || key === 'Escape') ? '2.wav' : '1.wav';
     new Audio(sound).play();
@@ -19,11 +20,11 @@ document.addEventListener('keydown', e => playSound(e.key));
 // document.addEventListener('keydown', function () {
 //     var key_sound_1 = new Audio('1.wav');
 //     key_sound_1.play();
-
+ 
 // });
 // #endregion
 
-// #region toggle status panel
+// #region keypress listener hotoggle status panel
 let visible = false;
 document.addEventListener("keydown", event => {
     if (event.key === "Tab") {
@@ -34,7 +35,7 @@ document.addEventListener("keydown", event => {
 });
 // #endregion
 
-// #region enter key and historydeclare
+// #region keypress listener init history and navigate history
 document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
         if (document.getElementById("id_command_input_box").value.trim()) {
@@ -65,6 +66,9 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
                     response_row_content.textContent = 'This is where you can get help!';
                 case 'who':
                     response_row_content.textContent = 'I am arthur!';
+                case 'connect':
+
+
                 default:
                     document.getElementById('id_text_row_container').style.display = 'none';
                     document.getElementById('id_command_input_box').disabled = true;
