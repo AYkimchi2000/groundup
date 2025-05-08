@@ -8,6 +8,12 @@ const server = createServer(app);
 const io = new Server(server);
 const fs = require('fs');
 
+let online_player_count = ""
+let online_party_list = ""
+let party_info = ""
+let created_character_data = ""
+
+
 // send files within the serve folder to client
 app.use(express.static('serve'));
 
@@ -25,7 +31,7 @@ io.on('connection', (socket) => {
     console.log(`user ${socket.id} sent something`);
 
     // #region command tree
-    const command_tree = {
+    const command_tree = {  
       test: {
         rename: {
           user_input_name: function () {
