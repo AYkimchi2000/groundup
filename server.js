@@ -7,6 +7,10 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 const fs = require('fs');
+const { Command } = require('commander');
+const program = new Command();
+
+
 
 let online_player_count = ""
 let online_party_list = ""
@@ -29,68 +33,74 @@ io.on('connection', (socket) => {
 io.on('connection', (socket) => {
   socket.on('client_command_input', (msg) => {
     console.log(`user ${socket.id} sent something`);
+    const { Command } = require('commander');
 
-    // #region command tree
-    const command_tree = {  
+    // #region command tree + parsing
+    const commandTree = {
       test: {
         rename: {
-          user_input_name: function () {
-            io.to(socket.id).emit('server_broadcast_all', `you are ${socket.id}!`);
-          }
+          '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
         },
         combat_init: {
-          "y/n": function () {
-            console.log('this is again, working')
-          }
-        },
-        char_select: {
-          elliot: function () {
-            socket.emit("elliot", hi);
-          },
-          clarissa: function () {
-            socket.emit("clarissa", hi);
-          },
-          mia: function () {
-            socket.emit("mia", hi);
-          }
-        },
-        enemy_select: {
-          goblin: function () {
-            socket.emit("goblin", hi);
-          },
-          skeleton: function () {
-            socket.emit("skeleton", hi);
-          },
-          wolves: function () {
-            socket.emit("wolves", hi);
-          }
-        },
-        party: {
-          playername: function () {
-            socket.emit("playername", hi);
-          },
-          view_member: function () {
-            socket.emit("view_member", hi);
-          },
-          invite: function () {
-            socket.emit("invite", hi);
-          }
+          alone: () => console.log('alone')
+          ,
+          party: () => console.log('alone')
         }
       }
     };
-    // #endregion 
 
-    // #region command tree walker
-    const parts = msg.split(" ");
-    let current = command_tree;
-    for (const part of parts) {
-      if (!current[part]) {
-        io.emit('server_broadcast_all', `Command not found: ${part}`);
-        return;
+    const descriptions = {
+      main: 'Main command',
+      test: 'Test command help',
+      rename: 'Rename something',
+      '<name>': 'Name argument help',
+      combat_init: 'Combat setup',
+      alone: 'Alone mode',
+      party: 'Party mode'
+    };
+
+    function buildCommands(name, tree, descriptions = {}) {
+      const cmd = new Command(name);
+      if (descriptions[name]) cmd.description(descriptions[name]);
+
+      for (const key in tree) {
+        const val = tree[key];
+
+        if (typeof val === 'function') {
+          cmd.command(key)
+            .description(descriptions[key] || '') // custom help
+            .action(val);
+        } else {
+          const subKeys = Object.keys(val);
+          const isArgCommand = subKeys.length === 1 && (subKeys[0].startsWith('<') || subKeys[0].startsWith('['));
+          if (isArgCommand) {
+            const [arg] = subKeys;
+            const fn = val[arg];
+            const subCmd = new Command(key);
+            if (descriptions[key]) subCmd.description(descriptions[key]);
+            subCmd.argument(arg).action(fn);
+            cmd.addCommand(subCmd);
+          } else {
+            const subCmd = buildCommands(key, val, descriptions);
+            cmd.addCommand(subCmd);
+          }
+        }
       }
-      current = current[part];
+
+      return cmd;
     }
-    current();
+
+    const program = buildCommands('main', commandTree, descriptions);
+    program.helpInformation = () => {
+      return 'Custom help message goes here';
+    };
+
+    program.commands.find(cmd => cmd.name() === 'test').helpInformation = () => {
+      return 'this is help message for test';
+    };
+    msg = msg.split(" ")
+    msg.unshift(null, null);
+    program.parse(msg);
     // #endregion
 
   });
