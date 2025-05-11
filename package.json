@@ -18,6 +18,7 @@
   "homepage": "https://github.com/AYkimchi2000/groundup#readme",
   "description": "",
   "dependencies": {
+    "@tarekraafat/autocomplete.js": "^10.2.9",
     "commander": "^13.1.0",
     "express": "^4.21.2",
     "socket.io": "^4.8.1"

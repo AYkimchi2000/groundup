@@ -1,4 +1,4 @@
-export const command_tree = {
+const command_tree = {
     test: {
         rename: {
             user_input_name: function () {

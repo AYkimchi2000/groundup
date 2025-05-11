@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Autocomplete Dropdown</title>
+  <style>
+    body {background-color: red; /* or any color you like */}
+    #suggestions { max-width: 200px; margin: 0; padding: 0; list-style: none; }
+    #suggestions li {cursor: pointer; background-color: blue; /* Added */}
+    #suggestions li:hover { background-color: #eee; }
+  </style>
+</head>
+<body>
+    <div id="container">
+        <input type="text" id="search" oninput="updateSuggestions()" />
+        <ul id="suggestions"></ul>
+    </div>
+
+  <script>
+    const data = ['apple', 'banana', 'grape', 'orange', 'peach', 'pear'];
+
+    function updateSuggestions() {
+      const input = document.getElementById('search').value.toLowerCase();
+      const suggestions = data.filter(item => item.startsWith(input));
+      document.getElementById('suggestions').innerHTML =
+        suggestions.map(s => `<li onclick="selectSuggestion('${s}')">${s}</li>`).join('');
+    }
+
+    function selectSuggestion(value) {
+      document.getElementById('search').value = value;
+      document.getElementById('suggestions').innerHTML = '';
+    }
+  </script>
+</body>
+</html>

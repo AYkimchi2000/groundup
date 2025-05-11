@@ -24,7 +24,7 @@ document.addEventListener('keydown', e => playSound(e.key));
 // });
 // #endregion
 
-// #region keypress listener hotoggle status panel
+// #region keypress listener hotoggle status panel & autocomplete
 let visible = false;
 document.addEventListener("keydown", event => {
     if (event.key === "Tab") {
@@ -35,8 +35,9 @@ document.addEventListener("keydown", event => {
 });
 // #endregion
 
-// #region keypress listener init history and navigate history
+// #region keypress listeners
 document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
+    // 
     if (event.key === "Enter") {
         if (document.getElementById("id_command_input_box").value.trim()) {
             
@@ -99,6 +100,12 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
         }
     }
+    if (event.key === "\\") {
+        event.preventDefault();
+        suggestionsVisible = !suggestionsVisible;
+        if (suggestionsVisible) { getSuggestions(); }
+        else { suggestionsBox.innerHTML = ''; }
+    }
 });
 
 
@@ -122,5 +129,78 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
     }
 });
 // #endregion
+
+// #region autocomplete
+
+const commandTree = {
+    test: {
+        rename: {
+            '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
+        },
+        combat_init: {
+            alone: () => console.log('alone')
+            ,
+            party: () => console.log('alone')
+        }
+    }
+};
+
+const input = document.getElementById("id_command_input_box"); 
+const suggestionsBox = document.getElementById("suggestions");  
+let suggestionsVisible = false;
+let currentSuggestions = [];
+
+function getSuggestions() { // this 
+    const segments = document.getElementById("id_command_input_box").value.trim().split(" "); // segments = user command array
+
+    let node = commandTree;
+    for (let i = 0; i < segments.length - 1; i++) { //loop this segment.length - 1 times
+        if (node && node[segments[i]]) {
+            node = node[segments[i]];
+        } else {
+            node = null;
+            break;
+        }
+    }
+
+    let currentSegment = segments[segments.length - 1];
+    const endsWithSpace = document.getElementById("id_command_input_box").value.endsWith(" ");
+
+    if (endsWithSpace || segments.length === 0) { // if either is true
+        currentSegment = "";
+        node = segments.length === 0 ? commandTree : node?.[segments[segments.length - 1]] ?? null;
+    }
+
+    if (node && typeof node === "object") {
+    currentSuggestions = Object.keys(node).filter(k => k.startsWith(currentSegment));
+    } else {
+    currentSuggestions = [];
+    }
+
+    if (suggestionsVisible) {
+    renderSuggestions(currentSuggestions, segments, endsWithSpace);
+    }
+}
+
+function renderSuggestions(suggestions, segments, endsWithSpace) {
+    suggestionsBox.innerHTML = suggestions.map(s => `<li onclick="selectSuggestion('${segments.slice(0, endsWithSpace ? segments.length : segments.length - 1).concat(s).join(' ')}')">${s}</li>`).join('');
+}
+
+function selectSuggestion(fullCommand) {
+    input.value = fullCommand + ' ';
+    suggestionsVisible = false;
+    suggestionsBox.innerHTML = '';
+    getSuggestions(); // Update suggestions based on the new value
+}
+
+input.addEventListener("input", getSuggestions);
+
+document.addEventListener("keydown", (event) => {
+
+});
+
+
+
+    // #endregion
 
 
