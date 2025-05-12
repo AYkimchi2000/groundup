@@ -89,8 +89,7 @@ io.on('connection', (socket) => {
         return;
       }
       current = current[part];
-    }
-    current();
+    };
     // #endregion
 
   });
