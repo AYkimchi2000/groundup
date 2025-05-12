@@ -101,8 +101,20 @@ io.on('connection', (socket) => {
     msg = msg.split(" ")
     msg.unshift(null, null);
     program.parse(msg);
+
+    program.exitOverride();
+    try {
+      program.parse(msg);
+    } catch (err) {
+      console.error('Command error:', err.message);
+      // Optionally notify the client
+      socket.emit("server_broadcast_all", `Command error: ${err.message}`);
+    }
+
+
     // #endregion
 
+    
   });
 });
 // #endregion

@@ -1,44 +1,55 @@
 // #region socket.io
-
 const socket = io();
 
-// #region mouseclick listener focus to inputbox
+// #region global variables
+const command_history = [];
+let historyIndex = 0;
+let autocomplete_visibility = false;
+let tab_panel_visible = false;
+const commandTree = {
+    test: {
+        rename: {
+            '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
+        },
+        combat_init: {
+            alone: () => console.log('alone'),
+            party: () => console.log('alone')
+        }
+    }
+};
+
+
+
+
+
+// #endregion
+
+// #region global click events 
 document.getElementById("id_prompt_panel").addEventListener("click", event => {
     document.getElementById("id_command_input_box").focus();
 });
 // #endregion
 
-
-// #region keypress listener trigger sound effect
-const playSound = key => {
-    const sound = (key === 'Enter' || key === ' ' || key === 'Backspace' || key === 'Escape') ? '2.wav' : '1.wav';
-    new Audio(sound).play();
-};
-document.addEventListener('keydown', e => playSound(e.key));
-
-
-// document.addEventListener('keydown', function () {
-//     var key_sound_1 = new Audio('1.wav');
-//     key_sound_1.play();
- 
-// });
-// #endregion
-
-// #region keypress listener hotoggle status panel & autocomplete
-let visible = false;
+// #region document keypress events
 document.addEventListener("keydown", event => {
+    // play keystrike audio
+    const sound = (e.key === 'Enter' || e.key === ' ' || e.key === 'Backspace' || e.key === 'Escape') ? '2.wav' : '1.wav';
+    new Audio(sound).play();
+
     if (event.key === "Tab") {
         event.preventDefault();
-        visible = !visible;
-        document.getElementById("id_status_panel").style.display = visible ? "block" : "none";
+        tab_panel_visible = !tab_panel_visible;
+        document.getElementById("id_status_panel").style.display = tab_panel_visible ? "block" : "none";
     }
 });
 // #endregion
 
-// #region keypress listeners
+// #region input box keypress events
 document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
-    // 
     if (event.key === "Enter") {
+        autocomplete_visibility = false;
+        autoCompleteJS.trigger = () => autocomplete_visibility
+        
         if (document.getElementById("id_command_input_box").value.trim()) {
             
             event.preventDefault()
@@ -100,21 +111,21 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
         }
     }
-    if (event.key === "\\") {
+    if (event.key === "/") {
         event.preventDefault();
-        suggestionsVisible = !suggestionsVisible;
-        if (suggestionsVisible) { getSuggestions(); }
-        else { suggestionsBox.innerHTML = ''; }
+        autocomplete_visibility = !autocomplete_visibility;
+        autoCompleteJS.trigger = () => autocomplete_visibility;
+
+        // Force re-evaluation
+        const inputEvent = new Event("input", { bubbles: true });
+        document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
     }
-});
 
 
-// #endregion
 
-// #region up down arrow navigate history
-const command_history = [];
-let historyIndex = 0;
-document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
+
+
+    // #region up down arrow navigate history
     if (event.key === "ArrowUp" && historyIndex > 0) {
         event.preventDefault();
         historyIndex--;
@@ -127,80 +138,99 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
         document.getElementById("id_command_input_box").value = command_history[historyIndex];
         return;
     }
+    // #endregion
+
 });
 // #endregion
 
-// #region autocomplete
+// #region input box value change events
+document.getElementById("id_command_input_box").addEventListener("input", (event) => {
+    autoCompleteJS.data.src = getSuggestions();
+    console.log(`data.src is ${autoCompleteJS.data.src}`)
+});
 
-const commandTree = {
-    test: {
-        rename: {
-            '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
+// #endregion
+
+// #region segmented suggestion
+
+const autoCompleteJS = new autoComplete({
+    detached: true,
+    trigger: () => false,
+    query: (input) => {
+        const current_segment = document.getElementById("id_command_input_box").value.split(" ")
+        return current_segment[current_segment.length - 1];
+    },
+    selector: "#id_command_input_box",
+    placeHolder: "press / to open autocomplete",
+    data: {
+        src: [" "],
+        cache: false,
+    },
+    resultsList: {
+        element: (list, data) => {
+            if (!data.results.length) {
+                const message = document.createElement("div");
+                message.setAttribute("class", "no_result");
+                message.innerHTML = `<span>Found No Results for "${data.query}"</span>`;
+                list.prepend(message);
+            }
         },
-        combat_init: {
-            alone: () => console.log('alone')
-            ,
-            party: () => console.log('alone')
-        }
+        noResults: true,
+    },
+    resultItem: {
+        highlight: true,
     }
-};
+});
 
 const input = document.getElementById("id_command_input_box"); 
 const suggestionsBox = document.getElementById("suggestions");  
 let suggestionsVisible = false;
 let currentSuggestions = [];
 
-function getSuggestions() { // this 
-    const segments = document.getElementById("id_command_input_box").value.trim().split(" "); // segments = user command array
+function getSuggestions() {
+    const input_command_as_list = document.getElementById("id_command_input_box").value.trim().split(" ");
 
     let node = commandTree;
-    for (let i = 0; i < segments.length - 1; i++) { //loop this segment.length - 1 times
-        if (node && node[segments[i]]) {
-            node = node[segments[i]];
+
+    // Traverse to the correct node based on input
+    for (let i = 0; i < input_command_as_list.length; i++) {
+        const segment = input_command_as_list[i];
+        if (node && segment in node) {
+            node = node[segment];
         } else {
             node = null;
             break;
         }
     }
 
-    let currentSegment = segments[segments.length - 1];
     const endsWithSpace = document.getElementById("id_command_input_box").value.endsWith(" ");
+    let currentSegment = "";
 
-    if (endsWithSpace || segments.length === 0) { // if either is true
-        currentSegment = "";
-        node = segments.length === 0 ? commandTree : node?.[segments[segments.length - 1]] ?? null;
+    if (!endsWithSpace && input_command_as_list.length > 0) { //runs when user is typing
+        currentSegment = input_command_as_list[input_command_as_list.length - 1];
+
+        // Go up one level for partial segment
+        node = commandTree;
+        for (let i = 0; i < input_command_as_list.length - 1; i++) {
+            const segment = input_command_as_list[i];
+            if (node && segment in node) {
+                node = node[segment];
+            } else {
+                node = null;
+                break;
+            }
+        }
     }
 
-    if (node && typeof node === "object") {
-    currentSuggestions = Object.keys(node).filter(k => k.startsWith(currentSegment));
-    } else {
-    currentSuggestions = [];
-    }
+    const currentSuggestions = node && typeof node === "object"
+        ? Object.keys(node).filter(k => k.startsWith(currentSegment))
+        : [];
 
-    if (suggestionsVisible) {
-    renderSuggestions(currentSuggestions, segments, endsWithSpace);
-    }
+    console.log(`current suggestion is ${currentSuggestions}`);
+    console.log(`current segment is "${currentSegment}"`);
+    console.log(`the query is this ${autoCompleteJS.query()}`)
+    console.log(`the input_command_as_list is this ${input_command_as_list}`)
+    return currentSuggestions;
 }
-
-function renderSuggestions(suggestions, segments, endsWithSpace) {
-    suggestionsBox.innerHTML = suggestions.map(s => `<li onclick="selectSuggestion('${segments.slice(0, endsWithSpace ? segments.length : segments.length - 1).concat(s).join(' ')}')">${s}</li>`).join('');
-}
-
-function selectSuggestion(fullCommand) {
-    input.value = fullCommand + ' ';
-    suggestionsVisible = false;
-    suggestionsBox.innerHTML = '';
-    getSuggestions(); // Update suggestions based on the new value
-}
-
-input.addEventListener("input", getSuggestions);
-
-document.addEventListener("keydown", (event) => {
-
-});
-
-
 
     // #endregion
-
-
