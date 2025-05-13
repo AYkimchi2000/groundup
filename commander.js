@@ -66,7 +66,7 @@ program.commands.find(cmd => cmd.name() === 'test').helpInformation = () => {
     return 'this is help message for test';
 };
 
-let x = "test rename elliot"
+let x = "test rename"
 x = x.split(" ")
 x.unshift(null, null);
 

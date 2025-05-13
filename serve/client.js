@@ -50,7 +50,8 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
         event.preventDefault()
         autocomplete_visibility = false;
         autoCompleteJS.trigger = () => autocomplete_visibility
-        
+        const inputEvent = new Event("input", { bubbles: true });
+        document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
         
         if (document.getElementById("id_command_input_box").value.trim()) {
 
@@ -60,12 +61,13 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
             //clone and replace last input command container
             const clone_of_previous_textrow = document.getElementById('id_text_row_container').cloneNode(true);
+            clone_of_previous_textrow.querySelector('div:nth-child(2) > div > ul').remove();
             clone_of_previous_textrow.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
             clone_of_previous_textrow.removeAttribute('id');
 
 
             //construct last input row element
-            
+
 
 
             //construct response row element 
@@ -121,10 +123,8 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
         event.preventDefault();
         autocomplete_visibility = !autocomplete_visibility;
         autoCompleteJS.trigger = () => autocomplete_visibility;
-
-        // Force re-evaluation
         const inputEvent = new Event("input", { bubbles: true });
-        document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
+        document.getElementById("id_command_input_box").dispatchEvent(inputEvent);// force re-render by sending a null keypress event
     }
 
 
