@@ -33,18 +33,21 @@ io.on('connection', (socket) => {
 io.on('connection', (socket) => {
   socket.on('client_command_input', (msg) => {
     console.log(`user ${socket.id} sent something`);
-    const { Command } = require('commander');
-
     // #region command tree + parsing
     const commandTree = {
       test: {
         rename: {
-          '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
+          '<name>': (name) => {
+            if (io && socket) {
+              io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`);
+            } else {
+              console.error("io or socket is not defined in the rename command action.");
+            }
+          }
         },
         combat_init: {
-          alone: () => console.log('alone')
-          ,
-          party: () => console.log('alone')
+          alone: () => console.log('alone'),
+          party: () => console.log('party')
         }
       }
     };
@@ -53,13 +56,14 @@ io.on('connection', (socket) => {
       main: 'Main command',
       test: 'Test command help',
       rename: 'Rename something',
-      '<name>': 'Name argument help',
+      '<name>': 'The new name',
       combat_init: 'Combat setup',
-      alone: 'Alone mode',
-      party: 'Party mode'
+      alone: 'Start combat alone',
+      party: 'Start combat with a party'
     };
 
     function buildCommands(name, tree, descriptions = {}) {
+
       const cmd = new Command(name);
       if (descriptions[name]) cmd.description(descriptions[name]);
 
@@ -68,7 +72,7 @@ io.on('connection', (socket) => {
 
         if (typeof val === 'function') {
           cmd.command(key)
-            .description(descriptions[key] || '') // custom help
+            .description(descriptions[key] || '')
             .action(val);
         } else {
           const subKeys = Object.keys(val);
@@ -78,7 +82,7 @@ io.on('connection', (socket) => {
             const fn = val[arg];
             const subCmd = new Command(key);
             if (descriptions[key]) subCmd.description(descriptions[key]);
-            subCmd.argument(arg).action(fn);
+            subCmd.argument(arg, descriptions[arg] || '').action(fn);
             cmd.addCommand(subCmd);
           } else {
             const subCmd = buildCommands(key, val, descriptions);
@@ -91,27 +95,36 @@ io.on('connection', (socket) => {
     }
 
     const program = buildCommands('main', commandTree, descriptions);
-    program.helpInformation = () => {
-      return 'Custom help message goes here';
-    };
-
-    program.commands.find(cmd => cmd.name() === 'test').helpInformation = () => {
-      return 'this is help message for test';
-    };
-    msg = msg.split(" ")
-    msg.unshift(null, null);
-    program.parse(msg);
-
     program.exitOverride();
-    try {
-      program.parse(msg);
-    } catch (err) {
-      console.error('Command error:', err.message);
-      // Optionally notify the client
-      socket.emit("server_broadcast_all", `Command error: ${err.message}`);
+
+    program.helpInformation = () => {
+      return 'Custom help message goes here. Available commands:\n' + program.commands.map(cmd => `  ${cmd.name()}: ${cmd.description()}`).join('\n');
+    };
+
+    const testCommand = program.commands.find(cmd => cmd.name() === 'test');
+    if (testCommand) {
+      testCommand.helpInformation = () => {
+        let help = 'Help for the "test" command:\n';
+        help += testCommand.commands.map(subCmd => `  ${testCommand.name()} ${subCmd.name()} ${subCmd._args.map(arg => arg.humanReadableArgName).join(' ')}: ${subCmd.description()}`).join('\n');
+        return help;
+      };
     }
 
+    const handleCommand = (msg) => {
+      const parts = msg.split(" ");
+      parts.unshift(process.argv[0], 'some_script');
+      try {
+        program.parse(parts);
+      } catch (err) {
+        console.error('Command parsing error:', err.message);
+        socket.emit("server_broadcast_all", `Command parsing error: ${err.message}`);
+      }
+    };
 
+    // Example usage within your socket event handler
+    // socket.on('message', (msg) => {
+    //   handleCommand(msg);
+    // });
     // #endregion
 
     

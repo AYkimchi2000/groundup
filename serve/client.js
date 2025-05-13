@@ -47,12 +47,12 @@ document.addEventListener("keydown", event => {
 // #region input box keypress events
 document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
+        event.preventDefault()
         autocomplete_visibility = false;
         autoCompleteJS.trigger = () => autocomplete_visibility
         
+        
         if (document.getElementById("id_command_input_box").value.trim()) {
-            
-            event.preventDefault()
 
             //save to command_history
             command_history.push(document.getElementById("id_command_input_box").value);
@@ -62,6 +62,12 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             const clone_of_previous_textrow = document.getElementById('id_text_row_container').cloneNode(true);
             clone_of_previous_textrow.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
             clone_of_previous_textrow.removeAttribute('id');
+
+
+            //construct last input row element
+            
+
+
             //construct response row element 
             const response_row_container = document.createElement('div');
             const response_row_prefix = document.createElement('div');
