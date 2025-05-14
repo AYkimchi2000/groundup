@@ -56,7 +56,7 @@ io.on('connection', (socket) => {
       alone: 'Alone mode',
       party: 'Party mode'
     };
-    // reads the commanTree and feeds a Commander object that allows Commander.js to function
+    // reads the commanTree and outputs a Commander object that allows Commander.js to function
     function buildCommands(name, tree, descriptions = {}) { 
       const cmd = new Command(name);
       if (descriptions[name]) cmd.description(descriptions[name]);
@@ -87,15 +87,20 @@ io.on('connection', (socket) => {
 
       return cmd;
     }
-
-    const program = buildCommands('main', commandTree, descriptions);
+    
+    const program = buildCommands('main', commandTree, descriptions); //instantiate program as commander Object
     program.exitOverride();
-    program.helpInformation = () => {
+
+    //Overrides the default help output for the entire CLI program.
+    program.helpInformation = () => { 
       return 'Custom help message goes here';
     };
+    //Overrides the help output only for the test subcommand.
     program.commands.find(cmd => cmd.name() === 'test').helpInformation = () => {
       return 'this is help message for test';
     };
+
+    
     x = msg.split(" ")
     x.unshift(null, null);
     try {
