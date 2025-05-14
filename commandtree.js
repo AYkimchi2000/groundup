@@ -1,48 +1,44 @@
 const command_tree = {
     test: {
         rename: {
-            user_input_name: function () {
-                //function goes here
-                console.log('this is working')
-                io.to(socketId).emit('server_broadcast_all', 'client_specific_message is working!');
-            }
+            '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
         },
         combat_init: {
             "y/n": function () {
-                console.log('this is again, working')
+                io.to(socket.id).emit("placeholder")
             }
         },
         char_select: {
             elliot: function () {
-                socket.emit("elliot", hi);
+                io.to(socket.id).emit("placeholder")
             },
             clarissa: function () {
-                socket.emit("clarissa", hi);
+                io.to(socket.id).emit("placeholder")
             },
             mia: function () {
-                socket.emit("mia", hi);
+                io.to(socket.id).emit("placeholder")
             }
         },
         enemy_select: {
             goblin: function () {
-                socket.emit("goblin", hi);
+                io.to(socket.id).emit("placeholder")
             },
             skeleton: function () {
-                socket.emit("skeleton", hi);
+                io.to(socket.id).emit("placeholder")
             },
             wolves: function () {
-                socket.emit("wolves", hi);
+                io.to(socket.id).emit("placeholder")
             }
         },
         party: {
             playername: function () {
-                socket.emit("playername", hi);
+                io.to(socket.id).emit("placeholder")
             },
             view_member: function () {
-                socket.emit("view_member", hi);
+                io.to(socket.id).emit("placeholder")
             },
             invite: function () {
-                socket.emit("invite", hi);
+                io.to(socket.id).emit("placeholder")
             }
         }
     }

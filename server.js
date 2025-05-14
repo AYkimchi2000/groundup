@@ -17,7 +17,6 @@ let online_party_list = ""
 let party_info = ""
 let created_character_data = ""
 
-
 // send files within the serve folder to client
 app.use(express.static('serve'));
 
@@ -41,9 +40,9 @@ io.on('connection', (socket) => {
           '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
         },
         combat_init: {
-          alone: () => io.to(socket.id).emit("server_broadcast_all","you chose to fight alone...")
+          alone: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight alone...")
           ,
-          party: () => io.to(socket.id).emit("server_broadcast_all","you chose to fight together...")
+          party: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight together...")
         }
       }
     };
@@ -57,8 +56,8 @@ io.on('connection', (socket) => {
       alone: 'Alone mode',
       party: 'Party mode'
     };
-
-    function buildCommands(name, tree, descriptions = {}) {
+    // reads the commanTree and feeds a Commander object that allows Commander.js to function
+    function buildCommands(name, tree, descriptions = {}) { 
       const cmd = new Command(name);
       if (descriptions[name]) cmd.description(descriptions[name]);
 
@@ -90,22 +89,27 @@ io.on('connection', (socket) => {
     }
 
     const program = buildCommands('main', commandTree, descriptions);
+    program.exitOverride();
     program.helpInformation = () => {
       return 'Custom help message goes here';
     };
-
     program.commands.find(cmd => cmd.name() === 'test').helpInformation = () => {
       return 'this is help message for test';
     };
     x = msg.split(" ")
     x.unshift(null, null);
-    program.exitOverride();
     try {
-      program.parse(x);
-    } catch (error) {
-      console.error('An error occurred:', error.message);
-      io.to(socket.id).emit("server_broadcast_all", ``)
+      program.parse(x, { from: 'user' });  // <-- important: avoids reading from process.argv
+    } catch (err) {
+      if (err.exitCode !== undefined) {
+        // It's a CommanderError
+        io.to(socket.id).emit("server_broadcast_all", `Command error: ${err.message}`);
+      } else {
+        // It's a general error
+        io.to(socket.id).emit("server_broadcast_all", `Unexpected error: ${err.message}`);
+      }
     }
+
 
     
 
@@ -115,6 +119,9 @@ io.on('connection', (socket) => {
   });
 });
 // #endregion
+
+
+
 
 server.listen(3000, () => {
   console.log('server running at http://localhost:3000');

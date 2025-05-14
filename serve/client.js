@@ -4,6 +4,7 @@ const socket = io();
 // #region global variables
 const command_history = [];
 let historyIndex = 0;
+let no_result_visibility = true;
 let autocomplete_visibility = false;
 let tab_panel_visible = false;
 const commandTree = {
@@ -27,7 +28,7 @@ const commandTree = {
 
 // #region global click events 
 document.getElementById("id_prompt_panel").addEventListener("click", event => {
-    document.getElementById("id_command_input_box").focus();
+
 });
 // #endregion
 
@@ -42,7 +43,10 @@ document.addEventListener("keydown", event => {
         tab_panel_visible = !tab_panel_visible;
         document.getElementById("id_status_panel").style.display = tab_panel_visible ? "block" : "none";
     }
+
 });
+
+
 // #endregion
 
 // #region input box keypress events
@@ -50,7 +54,6 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
     if (event.key === "Enter") {
         event.preventDefault()
         autocomplete_visibility = false;
-        autoCompleteJS.trigger = () => autocomplete_visibility
         const inputEvent = new Event("input", { bubbles: true });
         document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
         
@@ -123,13 +126,17 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
     if (event.key === "\\") {
         event.preventDefault();
         autocomplete_visibility = !autocomplete_visibility;
-        autoCompleteJS.trigger = () => autocomplete_visibility;
         const inputEvent = new Event("input", { bubbles: true });
         document.getElementById("id_command_input_box").dispatchEvent(inputEvent);// force re-render by sending a null keypress event
     }
 
-
-
+    if (event.key === "`") {
+        event.preventDefault();
+        // no_result_visibility = false;
+        autoCompleteJS.resultsList.noResults = !autoCompleteJS.resultsList.noResults;
+        const inputEvent = new Event("input", { bubbles: true });
+        document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
+    }
 
 
     // #region up down arrow navigate history
@@ -162,7 +169,7 @@ document.getElementById("id_command_input_box").addEventListener("input", (event
 
 const autoCompleteJS = new autoComplete({
     detached: true,
-    trigger: () => false,
+    trigger: () => autocomplete_visibility,
     query: (input) => {
         const current_segment = document.getElementById("id_command_input_box").value.split(" ")
         return current_segment[current_segment.length - 1];
@@ -182,7 +189,7 @@ const autoCompleteJS = new autoComplete({
                 list.prepend(message);
             }
         },
-        noResults: true,
+        noResults: false,
     },
     resultItem: {
         highlight: true,
@@ -194,12 +201,69 @@ const suggestionsBox = document.getElementById("suggestions");
 let suggestionsVisible = false;
 let currentSuggestions = [];
 
+//working one
+// function getSuggestions() {
+//     const inputBox = document.getElementById("id_command_input_box");
+//     const input_command_as_list = inputBox.value.trim().split(" ");
+
+//     let node = commandTree;
+
+//     // Traverse to the correct node based on input
+//     for (let i = 0; i < input_command_as_list.length; i++) {
+//         const segment = input_command_as_list[i];
+//         if (node && segment in node) {
+//             node = node[segment];
+//         } else {
+//             node = null;
+//             break;
+//         }
+//     }
+
+//     const endsWithSpace = inputBox.value.endsWith(" ");
+//     let currentSegment = "";
+
+//     if (!endsWithSpace && input_command_as_list.length > 0) { // When user is typing
+//         currentSegment = input_command_as_list[input_command_as_list.length - 1];
+
+//         // Re-traverse for incomplete segment
+//         node = commandTree;
+//         for (let i = 0; i < input_command_as_list.length - 1; i++) {
+//             const segment = input_command_as_list[i];
+//             if (node && segment in node) {
+//                 node = node[segment];
+//             } else {
+//                 node = null;
+//                 break;
+//             }
+//         }
+//     }
+
+//     let currentSuggestions = [];
+
+//     if (node && typeof node === "object") {
+//         // First, collect all placeholders like <name>, <target> etc., without filtering them
+//         currentSuggestions = Object.keys(node)
+//             .filter(k => k.startsWith('<') && k.endsWith('>')) // Match only placeholders
+//             .map(k => `{${k.slice(1, -1)}}`); // Convert to {name} for display
+
+//         // Then, filter and match other commands/arguments as usual
+//         currentSuggestions = currentSuggestions.concat(
+//             Object.keys(node)
+//                 .filter(k => !k.startsWith('<') && k.startsWith(currentSegment)) // Only filter normal commands
+//         );
+//     }
+
+//     return currentSuggestions;
+// }
+
+//experiment
 function getSuggestions() {
-    const input_command_as_list = document.getElementById("id_command_input_box").value.trim().split(" ");
+    const inputBox = document.getElementById("id_command_input_box");
+    const input_command_as_list = inputBox.value.trim().split(" ");
 
     let node = commandTree;
 
-    // Traverse to the correct node based on input
+    // Traverse the full input to get the current node
     for (let i = 0; i < input_command_as_list.length; i++) {
         const segment = input_command_as_list[i];
         if (node && segment in node) {
@@ -210,13 +274,13 @@ function getSuggestions() {
         }
     }
 
-    const endsWithSpace = document.getElementById("id_command_input_box").value.endsWith(" ");
+    const endsWithSpace = inputBox.value.endsWith(" ");
     let currentSegment = "";
 
-    if (!endsWithSpace && input_command_as_list.length > 0) { //runs when user is typing
+    if (!endsWithSpace && input_command_as_list.length > 0) {
         currentSegment = input_command_as_list[input_command_as_list.length - 1];
 
-        // Go up one level for partial segment
+        // Re-traverse for incomplete segment
         node = commandTree;
         for (let i = 0; i < input_command_as_list.length - 1; i++) {
             const segment = input_command_as_list[i];
@@ -228,16 +292,24 @@ function getSuggestions() {
             }
         }
     }
+    if (node && typeof node === "object") {
+        currentSuggestions = Object.keys(node)
+            .filter(k => currentSegment === "" || (!k.startsWith('<') && k.startsWith(currentSegment) || (k.startsWith('<') && k.endsWith('>'))))
+            .map(k => {
+                if (k.startsWith('<') && k.endsWith('>')) {
+                    return `{${k.slice(1, -1)}}`;  // Wrap argument suggestions with {}
+                }
+                return k;
+            });
+    }
 
-    const currentSuggestions = node && typeof node === "object"
-        ? Object.keys(node).filter(k => k.startsWith(currentSegment))
-        : [];
+    // Toggle the noResults flag
+    if (currentSegment.startsWith('<') && currentSegment.endsWith('>')) {
+        autoCompleteJS.resultsList.noResults = true;  // In argument mode, show noResults
+    } else {
+        autoCompleteJS.resultsList.noResults = false; // Reset when done typing argument
+    }
 
-    console.log(`current suggestion is ${currentSuggestions}`);
-    console.log(`current segment is "${currentSegment}"`);
-    console.log(`the query is this ${autoCompleteJS.query()}`)
-    console.log(`the input_command_as_list is this ${input_command_as_list}`)
     return currentSuggestions;
 }
-
     // #endregion
