@@ -15,6 +15,7 @@ const commandTree = {
             alone: () => console.log('alone'),
             party: () => console.log('alone')
         }
+        
     }
 };
 
@@ -119,7 +120,7 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
         }
     }
-    if (event.key === "/") {
+    if (event.key === "\\") {
         event.preventDefault();
         autocomplete_visibility = !autocomplete_visibility;
         autoCompleteJS.trigger = () => autocomplete_visibility;
@@ -157,7 +158,7 @@ document.getElementById("id_command_input_box").addEventListener("input", (event
 
 // #endregion
 
-// #region segmented suggestion
+// #region autocomplete
 
 const autoCompleteJS = new autoComplete({
     detached: true,
@@ -167,7 +168,7 @@ const autoCompleteJS = new autoComplete({
         return current_segment[current_segment.length - 1];
     },
     selector: "#id_command_input_box",
-    placeHolder: "press / to open autocomplete",
+    placeHolder: "press \\ to open autocomplete",
     data: {
         src: [" "],
         cache: false,

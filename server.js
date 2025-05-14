@@ -11,7 +11,7 @@ const { Command } = require('commander');
 const program = new Command();
 
 
-
+// gamestates
 let online_player_count = ""
 let online_party_list = ""
 let party_info = ""

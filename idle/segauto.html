@@ -58,8 +58,6 @@
         suggestionsBox.innerHTML = suggestions.map(s => `<li onclick="selectSuggestion('${segments.slice(0, endsWithSpace ? segments.length : segments.length - 1).concat(s).join(' ')}')">${s}</li>`).join('');
     }
 
-
-    // this 
     function selectSuggestion(fullCommand) {
         input.value = fullCommand + ' ';
         suggestionsVisible = false;

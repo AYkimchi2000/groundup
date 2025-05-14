@@ -103,10 +103,16 @@ body {
 ul {
     margin: 0;
     padding: 0;
+        /* or set a specific width */
+    width: fit-content;
 }
 
 li {
     list-style: none;
+}
+
+#autoComplete_list_1 {
+    background-color: rgb(45, 41, 41);
 }
 
 
