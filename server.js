@@ -56,9 +56,11 @@ io.on('connection', (socket) => {
       alone: 'Alone mode',
       party: 'Party mode'
     };
-    // reads the commanTree and outputs a Commander object that allows Commander.js to function
-    function buildCommands(name, tree, descriptions = {}) { 
+    // reads the commanTree and feeds a Commander object that allows Commander.js to function
+    function buildCommands(name, tree, descriptions = {}) {
       const cmd = new Command(name);
+      cmd.exitOverride(); // Set exitOverride on every command
+
       if (descriptions[name]) cmd.description(descriptions[name]);
 
       for (const key in tree) {
@@ -66,8 +68,9 @@ io.on('connection', (socket) => {
 
         if (typeof val === 'function') {
           cmd.command(key)
-            .description(descriptions[key] || '') // custom help
-            .action(val);
+            .description(descriptions[key] || '')
+            .action(val)
+            .exitOverride(); // Also set on inline subcommands
         } else {
           const subKeys = Object.keys(val);
           const isArgCommand = subKeys.length === 1 && (subKeys[0].startsWith('<') || subKeys[0].startsWith('['));
@@ -75,6 +78,7 @@ io.on('connection', (socket) => {
             const [arg] = subKeys;
             const fn = val[arg];
             const subCmd = new Command(key);
+            subCmd.exitOverride(); // Also here
             if (descriptions[key]) subCmd.description(descriptions[key]);
             subCmd.argument(arg).action(fn);
             cmd.addCommand(subCmd);
@@ -87,31 +91,25 @@ io.on('connection', (socket) => {
 
       return cmd;
     }
-    
-    const program = buildCommands('main', commandTree, descriptions); //instantiate program as commander Object
-    program.exitOverride();
 
-    //Overrides the default help output for the entire CLI program.
-    program.helpInformation = () => { 
+    const program = buildCommands('main', commandTree, descriptions);
+    program.exitOverride();
+    program.helpInformation = () => {
       return 'Custom help message goes here';
     };
-    //Overrides the help output only for the test subcommand.
     program.commands.find(cmd => cmd.name() === 'test').helpInformation = () => {
       return 'this is help message for test';
     };
-
-    
     x = msg.split(" ")
-    x.unshift(null, null);
     try {
       program.parse(x, { from: 'user' });  // <-- important: avoids reading from process.argv
     } catch (err) {
       if (err.exitCode !== undefined) {
         // It's a CommanderError
-        io.to(socket.id).emit("server_broadcast_all", `Command error: ${err.message}`);
+        io.to(socket.id).emit("server_broadcast_all", err.message);
       } else {
         // It's a general error
-        io.to(socket.id).emit("server_broadcast_all", `Unexpected error: ${err.message}`);
+        io.to(socket.id).emit("server_broadcast_all", err.message);
       }
     }
 

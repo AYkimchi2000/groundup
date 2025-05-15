@@ -10,7 +10,7 @@ let tab_panel_visible = false;
 const commandTree = {
     test: {
         rename: {
-            '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
+            '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`),
         },
         combat_init: {
             alone: () => console.log('alone'),
@@ -132,10 +132,7 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
     if (event.key === "`") {
         event.preventDefault();
-        // no_result_visibility = false;
-        autoCompleteJS.resultsList.noResults = !autoCompleteJS.resultsList.noResults;
-        const inputEvent = new Event("input", { bubbles: true });
-        document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
+        console.log(`${currentSuggestions}`, typeof currentSuggestions)
     }
 
 
@@ -185,7 +182,7 @@ const autoCompleteJS = new autoComplete({
             if (!data.results.length) {
                 const message = document.createElement("div");
                 message.setAttribute("class", "no_result");
-                message.innerHTML = `<span>Found No Results for "${data.query}"</span>`;
+                message.innerHTML = `<span>Found No Results for "${document.getElementById("id_command_input_box").value}"</span>`;
                 list.prepend(message);
             }
         },
@@ -198,7 +195,6 @@ const autoCompleteJS = new autoComplete({
 
 const input = document.getElementById("id_command_input_box"); 
 const suggestionsBox = document.getElementById("suggestions");  
-let suggestionsVisible = false;
 let currentSuggestions = [];
 
 //working one
@@ -304,10 +300,12 @@ function getSuggestions() {
     }
 
     // Toggle the noResults flag
-    if (currentSegment.startsWith('<') && currentSegment.endsWith('>')) {
-        autoCompleteJS.resultsList.noResults = true;  // In argument mode, show noResults
+    if (String(currentSuggestions).startsWith('{') && String(currentSuggestions).endsWith('}')) {
+        autoCompleteJS.resultsList.noResults = false;  // In argument mode, show noResults
+        console.log(`noresults turned off, ${currentSuggestions}`)
     } else {
-        autoCompleteJS.resultsList.noResults = false; // Reset when done typing argument
+        autoCompleteJS.resultsList.noResults = true; // Reset when done typing argument
+        console.log(`${currentSuggestions}`, typeof currentSuggestions)
     }
 
     return currentSuggestions;
