@@ -301,10 +301,12 @@ function getSuggestions() {
 
     // Toggle the noResults flag
     if (String(currentSuggestions).startsWith('{') && String(currentSuggestions).endsWith('}')) {
+        autoCompleteJS.resultItem.highlight = false;
         autoCompleteJS.resultsList.noResults = false;  // In argument mode, show noResults
         console.log(`noresults turned off, ${currentSuggestions}`)
     } else {
         autoCompleteJS.resultsList.noResults = true; // Reset when done typing argument
+        autoCompleteJS.resultItem.highlight = true;
         console.log(`${currentSuggestions}`, typeof currentSuggestions)
     }
 
